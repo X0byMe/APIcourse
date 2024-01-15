@@ -10,7 +10,14 @@ use App\Repository\InvoiceRepository;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
 
 #[ORM\Entity(repositoryClass: InvoiceRepository::class)]
-#[ApiResource(paginationEnabled:True, paginationItemsPerPage:10, order: ['amount' => 'asc'])]
+#[ApiResource(
+    paginationEnabled:True, 
+    paginationItemsPerPage:10, 
+    order: ['amount' => 'asc'],
+    normalizationContext: [
+        'groups' => ['invoices_read']
+    ]
+    )]
 #[ApiFilter(OrderFilter::class, properties:["amount","sentAt"])]
 class Invoice
 {
