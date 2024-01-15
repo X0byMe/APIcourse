@@ -10,6 +10,7 @@ use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 #[ApiResource(
@@ -53,11 +54,39 @@ class Customer
 
     #[ORM\ManyToOne(inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['customers_read'])]
     private ?User $user = null;
 
     public function __construct()
     {
         $this->invoices = new ArrayCollection();
+    }
+
+    /**
+     * Permet de récup le total des invoices
+     *
+     * @return float
+     */
+    #[Groups(['customers_read'])]
+    public function getTotalAmount() : float
+    {
+        return round(array_reduce($this->invoices->toArray(),function($total,$invoice){
+            return $total + $invoice->getAmount();
+        },0),2);
+    }
+
+    /**
+     * Permet de récup le montant total non payé des factures
+     *
+     * @return float
+     */
+    #[Groups(['customers_read'])]
+    public function getUnpaidAmount() : float
+    {
+        return round(array_reduce($this->invoices->toArray(),
+        function($total,$invoice){
+            return $total + ($invoice->getStatus() === "PAID" || $invoice->getStatus() === "CANCELLED" ? 0 : $invoice->getAmount());
+        },0),2);
     }
 
     public function getId(): ?int
